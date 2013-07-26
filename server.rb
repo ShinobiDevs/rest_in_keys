@@ -11,23 +11,18 @@ end
 gdbm = GDBM.new("#{Etc.systmpdir}/restdb.db")
 
 server.mount_proc '/' do |req, res|
-  key = req.path.split("/").first.to_s.downcase
+  path = req.path[1..-1]
+  key, val = path.split("/").collect(&:to_s).collect(&:downcase)
   case req.request_method.downcase
   when "get"
-    res.body = gdbm[key]
+    res.body = gdbm[key].to_s
   when "post"
-    val = req.path.split("/").last.to_s.downcase
-    if val.blank?
-      res.code = 422
-      res.body = "missing value"
+    if key == ""
+      res.status = 422
     else
       gdbm[key] = val
-      res.code = 200
-      res.body = "OK"
+      res.status = 201
     end
-  when "put"
-  when "delete"
-  else
   end
 end
 
